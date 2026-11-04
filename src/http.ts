@@ -3,6 +3,19 @@ import { RequestUrlResponse, requestUrl } from "obsidian";
 /** Erro com uma mensagem pronta para mostrar a quem usa o plugin. */
 export class FriendlyError extends Error {}
 
+/**
+ * Lê o corpo da resposta como JSON do tipo esperado.
+ * Devolve null se não for JSON (ex.: página de erro em HTML).
+ */
+export function readJson<T>(response: RequestUrlResponse): Partial<T> | null {
+	try {
+		const data: unknown = response.json;
+		return data && typeof data === "object" ? (data) : null;
+	} catch {
+		return null;
+	}
+}
+
 /** Tempo máximo de espera padrão. */
 const TIMEOUT_MS = 75000;
 
@@ -35,9 +48,9 @@ export async function request(url: string, options: RequestOptions = {}): Promis
 		() => null
 	);
 
-	let timer: ReturnType<typeof setTimeout> | undefined;
+	let timer: number | undefined;
 	const timeout = new Promise<never>((_, reject) => {
-		timer = setTimeout(
+		timer = window.setTimeout(
 			() => reject(new FriendlyError(options.timeoutMessage ?? "Demorou demais para responder. Tente de novo em alguns minutos.")),
 			options.timeoutMs ?? TIMEOUT_MS
 		);
@@ -45,6 +58,6 @@ export async function request(url: string, options: RequestOptions = {}): Promis
 	try {
 		return await Promise.race([pending, timeout]);
 	} finally {
-		clearTimeout(timer);
+		window.clearTimeout(timer);
 	}
 }

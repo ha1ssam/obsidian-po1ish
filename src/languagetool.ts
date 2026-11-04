@@ -1,4 +1,4 @@
-import { FriendlyError, request } from "./http";
+import { FriendlyError, readJson, request } from "./http";
 
 /**
  * Pedaço do texto: `text` é revisado, `markup` (sintaxe Markdown, links, código) é ignorado.
@@ -13,6 +13,10 @@ interface Match {
 	offset: number;
 	length: number;
 	replacements: { value: string }[];
+}
+
+interface CheckResponse {
+	matches?: Match[];
 }
 
 /**
@@ -32,7 +36,7 @@ const MARKUP = new RegExp(
 		"^[ \\t]*(?:[-*+]|\\d+[.)])[ \\t]+(?:\\[.\\][ \\t]+)?", // item de lista / tarefa
 		"^[ \\t]*#{1,6}[ \\t]+", // título
 		"^[ \\t]*>[ \\t]?", // citação
-		"(?<=^|\\s)#[^\\s#]+", // #tag
+		"#[^\\s#]+", // #tag (só no começo ou depois de espaço; conferido em toSegments)
 		"\\*\\*|~~|==|\\*", // negrito, riscado, destaque, itálico
 	].join("|"),
 	"gm"
@@ -49,6 +53,12 @@ export function toSegments(text: string): Segment[] {
 			continue;
 		}
 		const start = match.index;
+		// "#" no meio de uma palavra (ex.: C#, item#2) não é tag. Volta a procurar logo depois do "#".
+		// (Sem lookbehind no regex: o iOS antes do 16.4 não entende.)
+		if (match[0][0] === "#" && start > 0 && !/\s/.test(text[start - 1])) {
+			MARKUP.lastIndex = start + 1;
+			continue;
+		}
 		if (start > last) segments.push({ text: text.slice(last, start) });
 		segments.push(
 			INLINE_OBJECT.test(match[0]) && !match[0].startsWith("```")
@@ -100,7 +110,8 @@ export async function improveText(
 	}
 
 	// Aplica de trás para frente para não deslocar os offsets; pula correções sobrepostas.
-	const matches = ((response.json?.matches ?? []) as Match[])
+	const data = readJson<CheckResponse>(response);
+	const matches = (data?.matches ?? [])
 		.filter((m) => m.replacements.length > 0 && !touchesMarkup(m))
 		.sort((a, b) => b.offset - a.offset);
 	let result = text;

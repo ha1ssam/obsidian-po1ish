@@ -1,19 +1,24 @@
 {
 	"name": "po1ish",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Fix and polish the selected text in Obsidian.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production"
+		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint src"
 	},
 	"keywords": [],
 	"license": "MIT",
 	"devDependencies": {
+		"@eslint/js": "^10.0.1",
 		"@types/node": "^20.14.0",
 		"esbuild": "^0.25.0",
+		"eslint": "^10.14.0",
+		"eslint-plugin-obsidianmd": "^0.4.2",
 		"obsidian": "latest",
-		"typescript": "^5.6.0"
+		"typescript": "^5.6.0",
+		"typescript-eslint": "^8.72.1"
 	}
 }

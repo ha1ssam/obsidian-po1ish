@@ -3,7 +3,7 @@ import { improveWithAi } from "./ai";
 import { FriendlyError } from "./http";
 import { improveText } from "./languagetool";
 import { MAX_CHARS } from "./prompt";
-import { DEFAULT_SETTINGS, PolishSettingTab, PolishSettings } from "./settings";
+import { DEFAULT_SERVER, DEFAULT_SETTINGS, PolishSettingTab, PolishSettings } from "./settings";
 
 type Mode = "spelling" | "ai";
 
@@ -13,7 +13,8 @@ export default class PolishPlugin extends Plugin {
 	settings: PolishSettings = { ...DEFAULT_SETTINGS };
 
 	async onload(): Promise<void> {
-		this.settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) };
+		const saved = (await this.loadData()) as Partial<PolishSettings> | null;
+		this.settings = { ...DEFAULT_SETTINGS, ...saved };
 		this.addSettingTab(new PolishSettingTab(this.app, this));
 
 		// Opções no menu de clique direito, só quando há texto selecionado.
@@ -93,7 +94,7 @@ export default class PolishPlugin extends Plugin {
 				});
 				message = `Texto melhorado com IA. ${UNDO} desfaz.`;
 			} else {
-				const result = await improveText(original, this.settings.language, this.settings.server);
+				const result = await improveText(original, this.settings.language, this.settings.server || DEFAULT_SERVER);
 				text = result.text;
 				const n = result.fixes;
 				message = `${n} ${n === 1 ? "correção aplicada" : "correções aplicadas"}. ${UNDO} desfaz.`;

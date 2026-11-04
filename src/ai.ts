@@ -1,5 +1,5 @@
 import { RequestUrlResponse } from "obsidian";
-import { FriendlyError, request } from "./http";
+import { FriendlyError, readJson, request } from "./http";
 import { toSegments } from "./languagetool";
 import { PROMPT } from "./prompt";
 
@@ -12,6 +12,22 @@ export const DEFAULT_GEMINI_MODEL = "gemini-flash-lite-latest";
 export const DEFAULT_OLLAMA_URL = "http://localhost:11434";
 /** Worker na Cloudflare que guarda a chave do Gemini do autor (pasta worker/). */
 export const SERVER_URL = "https://melhorar-desc.melhorar-desc-worker.workers.dev";
+
+interface GeminiResponse {
+	error: { message?: string };
+	candidates: { content?: { parts?: { text?: string; thought?: boolean }[] } }[];
+	models: { name?: string; displayName?: string; supportedGenerationMethods?: string[] }[];
+}
+
+interface ServerResponse {
+	text: string;
+	error: string;
+}
+
+interface OllamaResponse {
+	message: { content?: string };
+	models: { name?: string }[];
+}
 
 const PLACEHOLDER = /⟦(\d+)⟧/g;
 const BLOCK_MARKER = /^(?:```|[ \t]*(?:[-*+]|\d+[.)]|#{1,6}|>)(?:[ \t]|$))/;
@@ -67,7 +83,7 @@ const AI_TIMEOUT = "A IA demorou demais para responder. Tente de novo em alguns 
 
 function geminiError(response: RequestUrlResponse | null): FriendlyError {
 	if (!response) return new FriendlyError("Não foi possível falar com o Gemini. Verifique a internet.");
-	const message: string = response.json?.error?.message ?? "";
+	const message = readJson<GeminiResponse>(response)?.error?.message ?? "";
 	if (response.status === 429) return new FriendlyError("Limite gratuito do Gemini atingido. Espere um pouco e tente de novo.");
 	if (/API key/i.test(message) || response.status === 401 || response.status === 403) {
 		return new FriendlyError("Chave do Gemini inválida. Confira nas configurações do plugin.");
@@ -88,7 +104,7 @@ async function askGemini(text: string, key: string, model: string): Promise<stri
 		},
 	});
 	if (response?.status !== 200) throw geminiError(response);
-	const parts: { text?: string; thought?: boolean }[] = response.json?.candidates?.[0]?.content?.parts ?? [];
+	const parts = readJson<GeminiResponse>(response)?.candidates?.[0]?.content?.parts ?? [];
 	const answer = parts.filter((part) => !part.thought).map((part) => part.text ?? "").join("");
 	if (!answer.trim()) throw new FriendlyError("O Gemini não devolveu texto (pode ter sido bloqueado pelos filtros).");
 	return answer;
@@ -97,11 +113,11 @@ async function askGemini(text: string, key: string, model: string): Promise<stri
 async function askServer(text: string, url: string): Promise<string> {
 	const response = await request(`${url.replace(/\/+$/, "")}/improve`, { method: "POST", timeoutMessage: AI_TIMEOUT, body: { text } });
 	if (!response) throw new FriendlyError("Não foi possível falar com o servidor do plugin. Verifique a internet.");
+	const data = readJson<ServerResponse>(response);
 	if (response.status !== 200) {
-		const message: string | undefined = response.json?.error;
-		throw new FriendlyError(message ?? `O servidor do plugin respondeu com erro ${response.status}.`);
+		throw new FriendlyError(data?.error ?? `O servidor do plugin respondeu com erro ${response.status}.`);
 	}
-	return response.json?.text ?? "";
+	return data?.text ?? "";
 }
 
 async function askOllama(text: string, url: string, model: string): Promise<string> {
@@ -123,7 +139,7 @@ async function askOllama(text: string, url: string, model: string): Promise<stri
 	if (!response) throw new FriendlyError("O Ollama não está rodando. Abra o Ollama e tente de novo.");
 	if (response.status === 404) throw new FriendlyError(`Modelo "${model}" não encontrado no Ollama.`);
 	if (response.status !== 200) throw new FriendlyError(`O Ollama respondeu com erro ${response.status}.`);
-	return response.json?.message?.content ?? "";
+	return readJson<OllamaResponse>(response)?.message?.content ?? "";
 }
 
 export interface AiOptions {
@@ -164,8 +180,8 @@ export async function listGeminiModels(key: string): Promise<Record<string, stri
 	const response = await request(`${GEMINI_API}/models?pageSize=1000`, { headers: { "x-goog-api-key": key } });
 	if (response?.status !== 200) throw geminiError(response);
 	const models: Record<string, string> = {};
-	for (const model of response.json?.models ?? []) {
-		const id = String(model.name).replace(/^models\//, "");
+	for (const model of readJson<GeminiResponse>(response)?.models ?? []) {
+		const id = (model.name ?? "").replace(/^models\//, "");
 		if (!id.startsWith("gemini") || !model.supportedGenerationMethods?.includes("generateContent")) continue;
 		if (/tts|image|audio|live|embedding/i.test(id)) continue;
 		models[id] = model.displayName ? `${model.displayName} (${id})` : id;
@@ -178,5 +194,5 @@ export async function listOllamaModels(url: string): Promise<string[]> {
 	const response = await request(`${url.replace(/\/+$/, "")}/api/tags`, {});
 	if (!response) throw new FriendlyError("O Ollama não está rodando neste endereço.");
 	if (response.status !== 200) throw new FriendlyError(`O Ollama respondeu com erro ${response.status}.`);
-	return (response.json?.models ?? []).map((model: { name: string }) => model.name);
+	return (readJson<OllamaResponse>(response)?.models ?? []).map((model) => model.name ?? "").filter(Boolean);
 }

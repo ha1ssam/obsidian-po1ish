@@ -33,7 +33,7 @@ Only the selected text is sent: to the LanguageTool server for **Melhorar desc**
 
 ## Manual install
 
-Download `main.js` and `manifest.json` from the [latest release](../../releases/latest) into `<your vault>/.obsidian/plugins/polish/`, then enable **Po1ish** in Settings → Community plugins. Requires Obsidian 1.11.4 or newer.
+Download `main.js` and `manifest.json` from the [latest release](../../releases/latest) into `<your vault>/.obsidian/plugins/polish/`, then enable **Po1ish** in Settings → Community plugins. Requires Obsidian 1.13.0 or newer.
 
 ## Plugin server
 

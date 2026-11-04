@@ -1,4 +1,4 @@
-<img src="./assets/icon.png" width="72" alt="Po1ish">
+![Po1ish: fix spelling or polish any text with AI in Obsidian](./assets/banner.png)
 
 # Po1ish
 

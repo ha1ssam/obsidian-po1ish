@@ -17,7 +17,7 @@ export function readJson<T>(response: RequestUrlResponse): Partial<T> | null {
 }
 
 /** Tempo máximo de espera padrão. */
-const TIMEOUT_MS = 75000;
+const TIMEOUT_MS = 50000;
 
 export interface RequestOptions {
 	method?: string;

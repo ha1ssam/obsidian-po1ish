@@ -1,4 +1,4 @@
-import { App, DropdownComponent, PluginSettingTab, Setting, SettingDefinitionItem } from "obsidian";
+import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, SettingDefinitionItem } from "obsidian";
 import {
 	AiEngine,
 	DEFAULT_GEMINI_MODEL,
@@ -7,6 +7,7 @@ import {
 	listOllamaModels,
 } from "./ai";
 import type PolishPlugin from "./main";
+import { DEFAULT_PROMPT, GEMINI_MODELS } from "./prompt";
 
 export interface PolishSettings {
 	language: string;
@@ -17,6 +18,10 @@ export interface PolishSettings {
 	geminiModel: string;
 	ollamaUrl: string;
 	ollamaModel: string;
+	/** Mostrar antes e depois e só trocar o texto ao clicar em Aplicar. */
+	preview: boolean;
+	/** Prompt editado ("" = usar o padrão). Só vale com chave própria ou Ollama. */
+	customPrompt: string;
 }
 
 export const DEFAULT_SERVER = "https://api.languagetool.org";
@@ -29,6 +34,8 @@ export const DEFAULT_SETTINGS: PolishSettings = {
 	geminiModel: DEFAULT_GEMINI_MODEL,
 	ollamaUrl: DEFAULT_OLLAMA_URL,
 	ollamaModel: "",
+	preview: true,
+	customPrompt: "",
 };
 
 const LANGUAGES: Record<string, string> = {
@@ -69,7 +76,7 @@ export class PolishSettingTab extends PluginSettingTab {
 				items: [
 					{
 						name: "Idioma",
-						desc: "Idioma usado pela opção “Melhorar desc”, que corrige com o LanguageTool.",
+						desc: "Idioma usado pela opção “Corrigir ortografia”, que usa o LanguageTool.",
 						control: { type: "dropdown", key: "language", options: LANGUAGES },
 					},
 					{
@@ -84,8 +91,13 @@ export class PolishSettingTab extends PluginSettingTab {
 				heading: "Inteligência artificial",
 				items: [
 					{
+						name: "Prévia antes de aplicar",
+						desc: "Mostra o texto antes e depois, para editar, copiar ou tentar de novo. Desligada, a IA troca o texto direto.",
+						control: { type: "toggle", key: "preview" },
+					},
+					{
 						name: "Motor",
-						desc: "Usado pela opção “Melhorar desc com IA”, que corrige e também deixa o texto mais claro, sem mudar o sentido.",
+						desc: "Usado pelas opções “Polir”, que corrigem e também deixam o texto mais claro, sem mudar o sentido.",
 						aliases: ["IA", "AI", "Gemini", "Ollama"],
 						control: { type: "dropdown", key: "aiEngine", options: ENGINES },
 					},
@@ -127,12 +139,31 @@ export class PolishSettingTab extends PluginSettingTab {
 						visible: () => engine() === "ollama",
 						render: (setting) => this.renderOllamaModel(setting),
 					},
+					{
+						name: "Prompt da IA",
+						desc: "As instruções que a IA segue. O servidor do plugin sempre usa o prompt padrão; para usar o seu, escolha a sua chave do Gemini ou o Ollama.",
+						searchable: false,
+						visible: () => engine() === "server",
+					},
+					{
+						name: "Prompt da IA",
+						desc: "As instruções que a IA segue. Links, código e formatação continuam protegidos mesmo com o prompt editado.",
+						aliases: ["instruções", "prompt"],
+						visible: () => engine() !== "server",
+						control: { type: "textarea", key: "customPrompt", rows: 14 },
+					},
+					{
+						name: "Restaurar o prompt padrão",
+						visible: () => engine() !== "server",
+						render: (setting) => this.renderResetPrompt(setting),
+					},
 				],
 			},
 		];
 	}
 
 	getControlValue(key: string): unknown {
+		if (key === "customPrompt") return this.plugin.settings.customPrompt || DEFAULT_PROMPT;
 		return (this.plugin.settings as unknown as Record<string, unknown>)[key];
 	}
 
@@ -142,7 +173,12 @@ export class PolishSettingTab extends PluginSettingTab {
 		else if (key === "server") await this.plugin.updateSettings({ server: text || DEFAULT_SERVER });
 		else if (key === "aiEngine" && isEngine(value)) await this.plugin.updateSettings({ aiEngine: value });
 		else if (key === "geminiSecret") await this.plugin.updateSettings({ geminiSecret: text });
-		else if (key === "ollamaUrl") await this.plugin.updateSettings({ ollamaUrl: text || DEFAULT_OLLAMA_URL });
+		else if (key === "preview") await this.plugin.updateSettings({ preview: value === true });
+		else if (key === "customPrompt") {
+			// Guardar "" quando é igual ao padrão: assim melhorias futuras do padrão chegam a quem não editou.
+			const prompt = typeof value === "string" ? value : "";
+			await this.plugin.updateSettings({ customPrompt: prompt.trim() === DEFAULT_PROMPT.trim() ? "" : prompt });
+		} else if (key === "ollamaUrl") await this.plugin.updateSettings({ ollamaUrl: text || DEFAULT_OLLAMA_URL });
 		// O motor escolhido decide quais opções aparecem.
 		this.refreshDomState();
 	}
@@ -152,10 +188,10 @@ export class PolishSettingTab extends PluginSettingTab {
 		const settings = this.plugin.settings;
 		setting
 			.setName("Modelo do Gemini")
-			.setDesc(`“${DEFAULT_GEMINI_MODEL}” sempre usa o Flash-Lite mais novo: rápido e com plano gratuito.`);
+			.setDesc(`“Automático” tenta ${GEMINI_MODELS.map((m) => m.id).join(", ")}, nessa ordem, e pula os que estão esgotados, lotados ou lentos.`);
 		setting.addDropdown((dropdown) => {
 			const options: Record<string, string> = {
-				[DEFAULT_GEMINI_MODEL]: `Flash-Lite mais novo (${DEFAULT_GEMINI_MODEL})`,
+				[DEFAULT_GEMINI_MODEL]: "Automático (recomendado)",
 			};
 			if (settings.geminiModel && !(settings.geminiModel in options)) options[settings.geminiModel] = settings.geminiModel;
 			dropdown
@@ -173,6 +209,19 @@ export class PolishSettingTab extends PluginSettingTab {
 				})
 				.catch((error: Error) => setting.setDesc(error.message));
 		});
+	}
+
+	private renderResetPrompt(setting: Setting): void {
+		setting
+			.setName("Restaurar o prompt padrão")
+			.setDesc("Desfaz as suas mudanças no prompt e volta a usar o padrão do plugin.");
+		setting.addButton((button: ButtonComponent) =>
+			button.setButtonText("Restaurar").onClick(async () => {
+				await this.plugin.updateSettings({ customPrompt: "" });
+				// Redesenha para a caixa do prompt mostrar o padrão de novo.
+				this.update();
+			})
+		);
 	}
 
 	/** Lista os modelos já baixados no Ollama. */

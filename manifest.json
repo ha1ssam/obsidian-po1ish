@@ -1,9 +1,9 @@
 {
 	"id": "polish",
 	"name": "Po1ish",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"minAppVersion": "1.13.0",
-	"description": "Select some text and pick “Melhorar desc” to fix its spelling, or “Melhorar desc com IA” to also make it clearer. Works with no setup.",
+	"description": "Select some text to fix its spelling, or polish it with AI: it recognizes bug reports, changelogs, titles, messages and prompts, with a preview before applying.",
 	"author": "Haissam Makki",
 	"isDesktopOnly": false
 }

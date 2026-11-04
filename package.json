@@ -1,6 +1,6 @@
 {
 	"name": "po1ish",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Fix and polish the selected text in Obsidian.",
 	"main": "main.js",
 	"type": "module",

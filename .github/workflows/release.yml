@@ -1,5 +1,5 @@
 # Publica a release quando chega no main uma versão nova do manifest.json.
-# Cria a tag (ex.: 1.1.0) e anexa main.js e manifest.json,
+# Cria a tag (ex.: 1.1.0) e anexa main.js, manifest.json e styles.css,
 # como o Obsidian exige. Se a release da versão já existe, não faz nada.
 name: Release
 
@@ -47,13 +47,14 @@ jobs:
           subject-path: |
             main.js
             manifest.json
+            styles.css
       - name: Create release
         if: steps.version.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          gh release create "$VERSION" main.js manifest.json \
+          gh release create "$VERSION" main.js manifest.json styles.css \
             --target "$GITHUB_SHA" \
             --title "$VERSION" \
             --notes-file .github/release-notes.md

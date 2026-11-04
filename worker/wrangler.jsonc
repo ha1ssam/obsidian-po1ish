@@ -1,0 +1,19 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "melhorar-desc",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"workers_dev": true,
+	"vars": {
+		"GEMINI_MODEL": "gemini-flash-lite-latest,gemini-3.1-flash-lite,gemini-3-flash-preview"
+	},
+	// Cada pessoa (IP) pode fazer até 6 pedidos por minuto.
+	"ratelimits": [
+		{
+			"name": "LIMITER",
+			"namespace_id": "1001",
+			"simple": { "limit": 6, "period": 60 }
+		}
+	],
+	"observability": { "enabled": true }
+}

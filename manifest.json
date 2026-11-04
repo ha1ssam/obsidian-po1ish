@@ -1,0 +1,9 @@
+{
+	"id": "polish",
+	"name": "Po1ish",
+	"version": "1.0.0",
+	"minAppVersion": "1.11.4",
+	"description": "Select some text and pick “Melhorar desc” to fix its spelling, or “Melhorar desc com IA” to also make it clearer. Works with no setup.",
+	"author": "Haissam Makki",
+	"isDesktopOnly": false
+}

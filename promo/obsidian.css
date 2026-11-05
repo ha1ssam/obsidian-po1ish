@@ -1,0 +1,81 @@
+/* Tema escuro padrão do Obsidian (o necessário para as janelas do plugin). */
+:root {
+	--accent: #8b6cef;
+	--background-primary: #1e1e1e;
+	--background-secondary: #262626;
+	--background-modifier-border: #363636;
+	--background-modifier-hover: rgba(255, 255, 255, 0.067);
+	--background-modifier-form-field: #1e1e1e;
+	--text-normal: #dadada;
+	--text-muted: #a3a3a3;
+	--text-faint: #666;
+	--text-accent: #a68af9;
+	--text-error: #fb464c;
+	--text-on-accent: #fff;
+	--text-selection: rgba(139, 108, 239, 0.33);
+	--interactive-normal: #363636;
+	--interactive-accent: var(--accent);
+	--color-green: #44cf6e;
+	--font-text: "Inter", sans-serif;
+	--radius-s: 4px; --radius-m: 8px; --radius-l: 12px;
+	--size-4-1: 4px; --size-4-2: 8px; --size-4-3: 12px; --size-4-4: 16px;
+	--font-ui-smaller: 12px; --font-ui-small: 13px; --font-ui-medium: 15px;
+	--font-semibold: 600;
+	--line-height-normal: 1.5;
+	--shadow-l: 0 2px 8px rgba(0, 0, 0, .3), 0 18px 48px rgba(0, 0, 0, .45);
+}
+
+/* Janela (Modal) */
+.modal {
+	position: relative; display: flex; flex-direction: column;
+	width: 100%; padding: 24px; border-radius: var(--radius-l);
+	background: var(--background-primary); border: 1px solid var(--background-modifier-border);
+	box-shadow: var(--shadow-l); color: var(--text-normal); text-align: left;
+}
+.modal-close-button {
+	position: absolute; top: 18px; right: 18px; width: 22px; height: 22px; color: var(--text-faint);
+}
+.modal-close-button::before, .modal-close-button::after {
+	content: ""; position: absolute; left: 4px; right: 4px; top: 10px; height: 2px; border-radius: 1px; background: currentColor;
+}
+.modal-close-button::before { transform: rotate(45deg); }
+.modal-close-button::after { transform: rotate(-45deg); }
+.modal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #e6e6e6; }
+.modal-content p { margin: 10px 0 12px; line-height: 1.45; }
+
+textarea {
+	display: block; box-sizing: border-box; padding: 8px 12px; border-radius: var(--radius-s);
+	background: var(--background-modifier-form-field); border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal); outline: none; overflow: hidden;
+}
+textarea:disabled { opacity: 1; }
+button {
+	display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 14px;
+	border: none; border-radius: var(--radius-s); background: var(--interactive-normal); color: var(--text-normal);
+	font: 500 var(--font-ui-small) "Inter", sans-serif; box-shadow: 0 1px 1px rgba(0, 0, 0, .25);
+}
+button.mod-cta { background: var(--interactive-accent); color: var(--text-on-accent); }
+button:disabled { opacity: 1; }
+
+/* Menu de contexto */
+.menu {
+	width: 248px; padding: 6px; border-radius: var(--radius-m);
+	background: var(--background-secondary); border: 1px solid var(--background-modifier-border);
+	box-shadow: var(--shadow-l); font-size: 14px;
+}
+.menu-item { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: var(--radius-s); color: var(--text-normal); }
+.menu-item svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+.menu-item.dim { color: var(--text-muted); }
+.menu-item.selected { background: var(--interactive-accent); color: #fff; }
+.menu-item.selected svg { color: #fff; }
+.menu-separator { height: 1px; margin: 6px 4px; background: var(--background-modifier-border); }
+
+/* Lista com busca (FuzzySuggestModal) */
+.prompt {
+	width: 100%; border-radius: var(--radius-l); background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border); box-shadow: var(--shadow-l); overflow: hidden;
+}
+.prompt-input { height: 46px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid var(--background-modifier-border); color: var(--text-faint); font-size: 15px; }
+.suggestion-item { height: 36px; padding: 0 16px; margin: 4px 6px; display: flex; align-items: center; border-radius: var(--radius-s); font-size: 14px; color: var(--text-normal); }
+.suggestion-item.is-selected { background: var(--background-modifier-hover); }
+.suggestion-highlight { color: var(--text-accent); font-weight: 600; }

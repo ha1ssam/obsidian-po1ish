@@ -8,7 +8,8 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
 		"lint": "eslint src",
-		"banner": "node scripts/banner.mjs"
+		"banner": "node scripts/banner.mjs",
+		"promo": "node promo/build.mjs"
 	},
 	"keywords": [],
 	"license": "MIT",

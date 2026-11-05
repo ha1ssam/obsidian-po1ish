@@ -13,12 +13,13 @@ h1 { font-weight: 700; color: #ececec; margin: 0; letter-spacing: -0.025em; line
 .landscape .sub { font-size: 14.5px; }
 .sub b { color: #dcdcdc; font-weight: 600; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 24px; color: #ececec; letter-spacing: -0.02em; }
-.brand img { width: 42px; height: 42px; }
+.logo { display: block; width: 100%; height: 100%; overflow: visible; }
+.brand > span:first-child { width: 42px; height: 42px; flex: none; }
 .one { color: var(--accent); }
 .portrait .brand { position: absolute; left: 44px; bottom: 40px; }
 .landscape .left { display: flex; flex-direction: column; min-height: 0; }
 .landscape .brand { margin-top: auto; font-size: 20px; }
-.landscape .brand img { width: 36px; height: 36px; }
+.landscape .brand > span:first-child { width: 36px; height: 36px; }
 .stage { position: relative; }
 .portrait .stage { margin-top: 36px; }
 .landscape .stage { display: flex; align-items: center; justify-content: center; min-height: 0; }
@@ -27,8 +28,7 @@ h1 { font-weight: 700; color: #ececec; margin: 0; letter-spacing: -0.025em; line
 
 /* Card roxo da primeira imagem */
 .hero { background: var(--accent); border-radius: 18px; padding: 26px; color: #161616; display: flex; gap: 22px; }
-.hero .logo1 { position: relative; width: 52px; height: 52px; border-radius: 12px; background: #161616; color: var(--accent); display: grid; place-items: center; font: 700 32px "Inter", sans-serif; flex: none; }
-.hero .logo1 svg { position: absolute; top: -9px; right: -9px; width: 20px; height: 20px; fill: #cbbcff; }
+.hero .logo1 { width: 56px; height: 56px; flex: none; }
 .hero .kicker { font-family: "JetBrains Mono", monospace; font-size: 11.5px; }
 .hero .title { font: 700 34px/1.02 "Inter", sans-serif; letter-spacing: -0.025em; margin: 6px 0 10px; }
 .hero .title .one { color: #161616; }
@@ -62,18 +62,8 @@ h1 { font-weight: 700; color: #ececec; margin: 0; letter-spacing: -0.025em; line
 .tag.ok { color: #4ade80; }
 .tag svg { width: 13px; height: 13px; }
 
-/* Motores */
-.engine { padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; }
-.engine .ic { width: 38px; height: 38px; border-radius: 10px; background: rgba(139, 108, 239, 0.16); color: var(--accent); display: grid; place-items: center; flex: none; }
-.engine .ic svg { width: 20px; height: 20px; }
-.engine .name { font-weight: 600; font-size: 15.5px; color: #ececec; display: flex; align-items: center; gap: 8px; }
-.engine .badge { font: 500 11px "JetBrains Mono", monospace; color: #4ade80; background: rgba(74, 222, 128, 0.12); padding: 2px 7px; border-radius: 999px; }
-.engine .desc { font-size: 13.5px; line-height: 1.45; color: #9a9a9a; margin-top: 4px; }
-.landscape .engine { padding: 13px 15px; }
-.landscape .engine .desc { font-size: 12.5px; }
-
 .chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px; background: #232323; border: 1px solid #333; color: #d6d6d6; font-size: 13px; font-weight: 500; }
-.chip svg { width: 14px; height: 14px; color: var(--accent); }
+.chip .swatch { width: 12px; height: 12px; border-radius: 3px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Janelas reais do plugin dentro da imagem */

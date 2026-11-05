@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const SLIDES = ["menu", "preview", "types", "instruction", "markdown", "engines"];
+const SLIDES = ["menu", "preview", "types", "markdown"];
 const FORMATS = {
 	portrait: { width: 540, height: 960 },
 	landscape: { width: 900, height: 600 },

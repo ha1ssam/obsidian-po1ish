@@ -1,4 +1,5 @@
 // Monta cada imagem de divulgação. Ver promo/README.md.
+// Cada imagem tem o mesmo conteúdo nas duas versões; só o layout muda.
 const P = window.Promo;
 const params = new URLSearchParams(location.search);
 const FORMAT = params.get("f") || "portrait";
@@ -17,6 +18,17 @@ const h = (tag, attrs = {}, ...kids) => {
 	return el;
 };
 
+/**
+ * O logo, com a mesma geometria do assets/icon.png (grade de 512):
+ * quadrado em x 0–480, y 32–512, e a estrela com centro em (427, 85).
+ * Use sempre esta função, para a estrela ficar no mesmo lugar em todas as imagens.
+ */
+const logo = ({ square = "#8b6cef", one = "#181818", star = "#c9b8ff" } = {}) =>
+	`<svg class="logo" viewBox="0 0 512 512" aria-hidden="true">` +
+	`<rect y="32" width="480" height="480" rx="120" fill="${square}"/>` +
+	`<path d="M237 155H297V409H237V208L178 246V190Z" fill="${one}"/>` +
+	`<path d="M427 -1Q439 73 513 85Q439 97 427 171Q415 97 341 85Q415 73 427 -1Z" fill="${star}"/></svg>`;
+
 // Ícones Lucide (os mesmos do Obsidian).
 const svg = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 const ICON = {
@@ -32,14 +44,8 @@ const ICON = {
 	heading: svg('<path d="M6 12h12M6 20V4M18 20V4"/>'),
 	chat: svg('<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'),
 	check: svg('<path d="M20 6 9 17l-5-5"/>'),
-	cloud: svg('<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>'),
-	key: svg('<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
-	laptop: svg('<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>'),
-	shield: svg('<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'),
-	keyboard: svg('<path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/>'),
 };
-const chip = (icon, text) => h("span", { class: "chip", html: ICON[icon] }, text);
-const brand = () => h("div", { class: "brand" }, h("img", { src: "../assets/icon.png", alt: "" }),
+const brand = () => h("div", { class: "brand" }, h("span", { html: logo() }),
 	h("span", { html: 'Po<span class="one">1</span>ish' }));
 
 function frame(eyebrow, title, sub, stage) {
@@ -61,11 +67,11 @@ const pair = (icon, kind, before, after) => h("div", { class: "panel pair" },
 /** Texto em Markdown com o que a IA não vê destacado (usa o código do plugin). */
 const markdown = (text, fixes = []) => {
 	const el = h("div", { class: "md" });
+	const re = fixes.length ? new RegExp(`(${fixes.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`) : null;
 	for (const s of P.segments(text)) {
 		if (s.markup != null) { el.append(h("span", { class: "mk" }, s.markup)); continue; }
 		// Destaca as palavras corrigidas no "depois".
 		let rest = s.text;
-		const re = fixes.length ? new RegExp(`(${fixes.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`) : null;
 		while (re && rest) {
 			const m = re.exec(rest);
 			if (!m) break;
@@ -83,85 +89,66 @@ const SLIDES = {
 		const menu = h("div", { class: "menu" },
 			item("scissors", "Cut", "dim"), item("copy", "Copy", "dim"), item("paste", "Paste", "dim"),
 			h("div", { class: "menu-separator" }),
-			item("spell", "Corrigir ortografia"),
-			item("sparkles", "Polir texto com IA", "selected"),
-			item("list", "Polir texto como…"),
-			item("square", "Polir com instrução…"));
+			item("spell", "Fix spelling"),
+			item("sparkles", "Polish text with AI", "selected"),
+			item("list", "Polish text as…"),
+			item("square", "Polish with instruction…"));
 		const note = h("div", { class: "note", style: "box-shadow:0 18px 40px rgba(20,10,60,.4)" },
-			h("span", { class: "sel" }, "essa desc e otima, vc ja viu a [[Nota]]? tem q revisar oque falta"), h("span", { class: "caret" }));
+			h("span", { class: "sel" }, "this desc is grate, did u see the [[Note]]? need to check whats missing"), h("span", { class: "caret" }));
 		const right = h("div", { style: `display:flex;flex-direction:column;align-items:flex-end;flex:1;${L ? "padding-top:8px" : ""}` },
 			note, h("div", { style: `margin-top:-6px;margin-right:${L ? 18 : 30}px` }, menu));
-		const info = h("div", { style: "display:flex;flex-direction:column;" + (L ? "width:150px;flex:none" : "gap:16px") },
-			h("div", { class: "logo1", html: '1<svg viewBox="0 0 24 24"><path d="M12 0c.8 6.4 4.6 10.6 12 12-7.4 1.4-11.2 5.6-12 12-.8-6.4-4.6-10.6-12-12C7.4 10.6 11.2 6.4 12 0z"/></svg>' }),
-			h("div", { style: L ? "margin-top:auto" : "" },
-				h("div", { class: "kicker" }, "Obsidian plugin"),
-				h("div", { class: "title", html: 'Po<span class="one">1</span>ish' }),
-				h("div", { class: "text" }, "Fix spelling or polish any text with AI. No setup.")),
-			L ? h("div", { class: "foot", style: "margin-top:auto" }, "Desktop", h("br"), "and mobile") : null);
-		if (!L) { info.style.flexDirection = "row"; info.style.alignItems = "flex-start"; }
+		const about = [
+			h("div", { class: "kicker" }, "Obsidian plugin"),
+			h("div", { class: "title", html: 'Po<span class="one">1</span>ish' }),
+			h("div", { class: "text" }, "Fix spelling or polish any text with AI. No setup."),
+		];
+		const foot = h("div", { class: "foot" }, "Desktop and mobile");
+		const mark = h("div", { class: "logo1", html: logo({ square: "#161616", one: "#8b6cef" }) });
+		const info = L
+			? h("div", { style: "display:flex;flex-direction:column;width:150px;flex:none" },
+				mark, h("div", { style: "margin-top:auto" }, ...about), h("div", { style: "margin-top:auto" }, foot))
+			: h("div", { style: "display:flex;gap:18px;align-items:flex-start" },
+				mark, h("div", {}, ...about, h("div", { style: "margin-top:10px" }, foot)));
 		const hero = h("div", { class: "hero", style: L ? "height:500px;width:100%;padding:24px;gap:18px" : "flex-direction:column;gap:22px;padding-bottom:30px" }, info, right);
 		frame("Menu", "Select text. Right&#8209;click. Polish.", null, hero);
 	},
 	async preview() {
 		const box = h("div", { style: `width:${L ? 540 : 452}px` });
 		frame("Preview", "See it before it&nbsp;changes.",
-			"Edit the result, then <b>Aplicar</b> (Ctrl+Enter), <b>Copiar</b> or <b>Tentar de novo</b>.", box);
+			"Edit the result, then <b>Apply</b> (Ctrl+Enter), <b>Copy</b> or <b>Try again</b>.", box);
 		await P.preview(box, {
-			title: "Polir texto com IA",
-			before: "oi pessoal, so pra avisar q o deploy de hj foi adiado pra amanha pq achamos um bug no login, qlqr coisa me chamem",
-			after: "Oi, pessoal! Só para avisar que o deploy de hoje foi adiado para amanhã, porque encontramos um bug no login. Qualquer coisa, me chamem.",
+			title: "Polish text with AI",
+			before: "hey guys just a heads up the deploy for today got pushed to tomorow bc we found a bug in the login, ping me if u need anything",
+			after: "Hi everyone! Just a heads-up: today's deploy has been moved to tomorrow because we found a bug in the login. Ping me if you need anything.",
 		});
 	},
 	types() {
-		const T = P.types;
 		const grid = h("div", { style: `display:grid;grid-template-columns:${L ? "1fr 1fr" : "1fr"};gap:${L ? 10 : 12}px;width:100%` },
-			pair("bug", T.problem, "quando coloco a mesma data nos dois campos nao aparece nada",
-				'Ao preencher os campos <b>"Data de Início"</b> e <b>"Data de Fim"</b> com a mesma data, nenhum resultado é exibido.'),
-			pair("commit", T.change, "corrigi o combo que nao carregava",
-				'Corrigido o carregamento do combo <b>"Fornecedor"</b>, que impedia a filtragem.'),
-			pair("heading", T.title, "Problema que o filtro de fornecedor não está carregando",
-				'Filtro <b>"Fornecedor"</b> não carrega resultados'),
-			pair("chat", T.message, "bom dia loryn, conseguiu ver o relatorio? so tem mais 1 pra revisar",
-				"Bom dia, Loryn! Conseguiu ver o relatório? Só resta mais um para revisar."));
+			pair("bug", "Bug report", "when i put the same date in both fields nothing shows up",
+				'When the <b>"Start Date"</b> and <b>"End Date"</b> fields have the same date, no results are shown.'),
+			pair("commit", "Change or delivery", "fixed the combo that wasnt loading",
+				'Fixed the <b>"Supplier"</b> combo not loading, which blocked filtering.'),
+			pair("heading", "Title", "Problem where the supplier filter is not loading",
+				'<b>"Supplier"</b> filter loads no results'),
+			pair("chat", "Message", "morning loryn, did u see the report? theres only 1 more to review",
+				"Good morning, Loryn! Did you see the report? There's only one more to review."));
 		frame("Text types", "It knows what you're&nbsp;writing.",
-			"Bug reports, changes, titles, messages, summaries and prompts. Or pick the kind with <b>Polir texto como…</b>", grid);
-	},
-	instruction() {
-		const box = h("div", { style: `width:${L ? 520 : 452}px;display:flex;flex-direction:column;gap:${L ? 14 : 18}px` });
-		frame("Your words", "Tell it what you&nbsp;want.",
-			"Write things like <b>deixe mais formal</b>, <b>resuma em uma frase</b> or <b>transforme em lista</b>.", box);
-		const modalBox = h("div");
-		box.append(modalBox, pair("square", "deixe mais formal",
-			"galera, amanha a reuniao vai ser 15h e nao 14h, tragam o relatorio",
-			"Prezados, informo que a reunião de amanhã foi remarcada para as 15h. Por favor, tragam o relatório."));
-		P.request(modalBox, "deixe mais formal");
+			"Bug reports, changes, titles, messages, summaries and prompts. Or pick the kind with <b>Polish text as…</b>", grid);
 	},
 	markdown() {
-		const before = "- [ ] revisar o [[Roteiro de testes]] ate sexta #qa\n- o endpoint `/api/pedidos` da erro c/ filtro vazio\n- **importante**: ve o [guia](https://obsidian.md)";
-		const after = "- [ ] Revisar o [[Roteiro de testes]] até sexta. #qa\n- O endpoint `/api/pedidos` dá erro com o filtro vazio.\n- **Importante**: veja o [guia](https://obsidian.md).";
+		const before = "- [ ] reveiw the [[Test plan]] by friday #qa\n- the endpoint `/api/orders` errors w/ empty filter\n- **importent**: see the [guide](https://obsidian.md)";
+		const after = "- [ ] Review the [[Test plan]] by Friday. #qa\n- The endpoint `/api/orders` errors with an empty filter.\n- **Important**: see the [guide](https://obsidian.md).";
 		const panel = h("div", { class: "panel", style: `padding:${L ? "18px 20px" : "20px 18px"};width:100%` },
-			h("div", { class: "tag" }, "Antes"), markdown(before),
+			h("div", { class: "tag" }, "Before"), markdown(before),
 			h("div", { style: "height:1px;background:#2e2e2e;margin:16px 0" }),
-			h("div", { class: "tag ok", html: ICON.check }, "Depois"), markdown(after, ["Revisar", "até", "sexta.", "O endpoint", "dá", "com o", "vazio.", "Importante", "veja", ")."]));
+			h("div", { class: "tag ok", html: ICON.check }, "After"),
+			markdown(after, ["Review", "Friday.", "The", "with an", "Important", ")."]));
 		const legend = h("div", { class: "chips", style: "margin-top:14px" },
-			h("span", { class: "chip" }, h("span", { style: "width:12px;height:12px;border-radius:3px;background:rgba(139,108,239,.35)" }), "Never sent to the AI"),
-			h("span", { class: "chip" }, h("span", { style: "width:12px;height:12px;border-radius:3px;background:rgba(74,222,128,.3)" }), "Fixed"));
+			h("span", { class: "chip" }, h("span", { class: "swatch", style: "background:rgba(139,108,239,.35)" }), "Never sent to the AI"),
+			h("span", { class: "chip" }, h("span", { class: "swatch", style: "background:rgba(74,222,128,.3)" }), "Fixed"));
 		frame("Markdown", "Your Markdown stays&nbsp;put.",
 			"Links, tags, code, URLs and list markers never reach the AI. If one changes, nothing is applied.",
 			h("div", { style: "width:100%" }, panel, legend));
-	},
-	engines() {
-		const card = (icon, name, badge, desc) => h("div", { class: "panel engine" },
-			h("span", { class: "ic", html: ICON[icon] }),
-			h("div", {}, h("div", { class: "name" }, name, badge ? h("span", { class: "badge" }, badge) : null), h("div", { class: "desc" }, desc)));
-		const list = h("div", { style: `display:flex;flex-direction:column;gap:${L ? 10 : 12}px;width:100%` },
-			card("cloud", "Plugin default", "no setup", "Google Gemini through the plugin's server. Just install and use."),
-			card("key", "Your own Gemini key", "free", "Daily limits that are only yours. The key stays in Obsidian's Keychain."),
-			card("laptop", "Ollama", "offline", "Runs on your computer, so the text never leaves it. Desktop only."),
-			card("spell", "LanguageTool", null, "Spell check with no AI, right away, in Portuguese, English or Spanish."));
-		const chips = h("div", { class: "chips", style: `margin-top:${L ? 14 : 18}px` },
-			chip("shield", "Only the selected text is sent"), chip("keyboard", "A hotkey for every option"));
-		frame("AI engines", "No setup. Or fully&nbsp;offline.", null, h("div", { style: "width:100%" }, list, chips));
 	},
 };
 

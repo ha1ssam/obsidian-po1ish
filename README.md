@@ -50,6 +50,8 @@ Markdown syntax is never "corrected": list and task markers, headings, quotes, b
 
 Only the selected text is sent: to the LanguageTool server for **Corrigir ortografia**, and to the AI engine you picked for **Polir texto com IA** (Google Gemini, directly or through the plugin's server, or your local Ollama). On Gemini's free plan, Google may use the text to improve its models. Nothing else from your vault is sent.
 
+The plugin only writes to the clipboard when you click **Copiar** in the preview. It never reads the clipboard.
+
 ## Manual install
 
 Download `main.js`, `manifest.json` and `styles.css` from the [latest release](../../releases/latest) into `<your vault>/.obsidian/plugins/polish/`, then enable **Po1ish** in Settings → Community plugins. Requires Obsidian 1.13.0 or newer.
